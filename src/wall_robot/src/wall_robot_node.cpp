@@ -38,7 +38,7 @@ void LaserMsgRecived ( const sensor_msgs::LaserScan& laser_msg) {
      //5 = -112.5 deg
      //0 = -67.5 deg 
      //2 = 0 deg
-     
+
      data_rcvd=1;
      dt=laser_msg.scan_time;
      sens_front=ldat[5];
@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
           //} 
 
           //reaching the endpoint
-          if (odom_y<-9.5){
+          if (odom_y<-13.5){
                odom_y=0;
                //stop the robot
                msg.angular.z=0;
