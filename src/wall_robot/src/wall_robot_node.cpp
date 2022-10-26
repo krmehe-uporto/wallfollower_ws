@@ -36,8 +36,9 @@ void LaserMsgRecived ( const sensor_msgs::LaserScan& laser_msg) {
           //ROS_INFO_STREAM("data["<<i<<"]"<< ldat[i]);
      }
      //5 = -112.5 deg
-     //0 = -67.5 deg
+     //0 = -67.5 deg 
      //2 = 0 deg
+     
      data_rcvd=1;
      dt=laser_msg.scan_time;
      sens_front=ldat[5];
