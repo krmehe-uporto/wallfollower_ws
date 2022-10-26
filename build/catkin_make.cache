@@ -1,0 +1,2 @@
+wall_robot
+-DCATKIN_DEVEL_PREFIX=/home/krmisi/ros_ws/src/wallfollower_ws/devel -DCMAKE_INSTALL_PREFIX=/home/krmisi/ros_ws/src/wallfollower_ws/install -G Unix Makefiles

@@ -1,0 +1,5 @@
+properties: {}
+layers:
+  - name: "map"
+    map: "C_straight_thick.yaml"
+    color: [0.4, 0.4, 0.4, 1]

@@ -1,0 +1,28 @@
+bodies:
+  - name: base
+    pose: [0, 0, 0]
+    type: dynamic
+    color: [1, 1, 1, 0.4]
+
+    footprints:
+      - type: circle
+        radius: 0.3
+        density: 1
+
+      - type: polygon
+        points: [[-.25, -.05], [-.25, 0.05], [-.15, 0.05], [-.15, -0.05]]
+        density: 1
+
+      
+
+plugins:
+  - type: DiffDrive
+    name: turtlebot_drive
+    body: base
+   
+  - type: Laser
+    name: laser_front
+    body: base
+    range: 20
+    angle: {min: -1.96349540849, max: 0, increment: 0.392699081698}
+
