@@ -13,25 +13,18 @@
 #include <flatland_msgs/MoveModel.h>
 #include <flatland_msgs/SpawnModel.h>
 #include <flatland_server/timekeeper.h>
-//namespace fs = boost::filesystem;
 
 float ldat[3];
-float ldat_old[3];
-bool data_rcvd;
 
-float alpha,dt;
-int range=20;
 float threashold=1;
 float sens_front,sens_right_back, sens_right_front;
 double odom_x, odom_y;
-auto traveled_path_filename=std::chrono::system_clock::now();
 auto lap_start=std::chrono::system_clock::now();
 auto lap_end=std::chrono::system_clock::now();
 
 void LaserMsgRecived ( const sensor_msgs::LaserScan& laser_msg) {
      
-     for (size_t i=0;i<laser_msg.ranges.size();i++){
-          ldat_old[i]=ldat[i];
+     for (int i=0;i<laser_msg.ranges.size();i++){
           ldat[i]=laser_msg.ranges.operator[](i); 
           //ROS_INFO_STREAM("data["<<i<<"]"<< ldat[i]);
      }
@@ -39,8 +32,6 @@ void LaserMsgRecived ( const sensor_msgs::LaserScan& laser_msg) {
      //0 = -67.5 deg 
      //2 = 0 deg
 
-     data_rcvd=1;
-     dt=laser_msg.scan_time;
      sens_front=ldat[5];
      sens_right_back=ldat[0];
      sens_right_front=ldat[2];
@@ -74,26 +65,27 @@ void RelaunchModel(){
     srv_spawn.request.ns = "wall_r";
     srv_spawn.request.name = "turtlebot";
     srv_spawn.request.yaml_path = ("../yamls/turtlebot.model.yaml"); //robot_yaml.string();
+    //randomizing start position
     srv_spawn.request.pose.x = -4+(double)rand()/RAND_MAX*(2+4);
     srv_spawn.request.pose.y = -3+(double)rand()/RAND_MAX*(3.5+3);
     srv_spawn.request.pose.theta = (double)rand()/RAND_MAX*(M_1_PI);
+    //creating ros service for publishing data to the simulation environment
     ros::ServiceClient client;
     ros::NodeHandle nh;
     client = nh.serviceClient<flatland_msgs::SpawnModel>("spawn_model");
     
-    
     ros::service::waitForService("spawn_model", 1000);
         
         while(!client.call(srv_spawn)){
-            //rate.sleep();
             ROS_INFO_STREAM("wait for spawn");
         }
-     
+     //start new lap time
      lap_start=std::chrono::system_clock::now();
      std::time_t lap_start_t = std::chrono::system_clock::to_time_t(lap_start);
 
      ROS_INFO_STREAM("Model opened at " << std::ctime(&lap_start_t));
 }   
+
 void DeleteModel(){  
      lap_end=std::chrono::system_clock::now();
      //calculating elapsed time between lap start and finish
@@ -149,55 +141,61 @@ int main(int argc, char **argv) {
      //Sets the loop to publish at a rate of 10Hz
      ros::Rate rate(10);
      //Declares the message to be sent
-               geometry_msgs::Twist msg;
-       int ifcase;  
-         
-       while(ros::ok()) {
-          alpha=atan2(sens_right_back-ldat_old[0],msg.linear.x*dt);
-          
-          
-          ifcase=0;
-          double w=2;
-          double v=1; //0.1
-          if (isnan(sens_right_back) && isnan(sens_right_front) && isnan(sens_front)){
-               msg.angular.z=w;
-               msg.linear.x=0;
-               ifcase=1;
-          }
-          else if (sens_front>2*threashold && ((isnan(sens_right_back) && isnan(sens_right_front)) || (sens_right_back>1.5*threashold && sens_right_front>1.5*threashold ))) {
-               msg.angular.z=0;
-               msg.linear.x=v; //1
-               ifcase=2;
-          }
-          else if (sens_front<2*threashold ){ 
-               msg.angular.z=w;
-               msg.linear.x=0.5*v; //0.1;
-               ifcase=3;
-          }
+     geometry_msgs::Twist msg;
+     int ifcase;  
+       
+     while(ros::ok()) {
+     
+        ifcase=0;
+        double w=4;
+        double v=4;
 
-          else if (( !isnan(sens_right_back) && isnan(sens_right_front))) {
-               msg.angular.z=-w;
-               msg.linear.x= v; //0.2;
-               ifcase=4;
+        //if the robot sees nothing, just rotate in place
+        if (isnan(sens_right_back) && isnan(sens_right_front) && isnan(sens_front)){
+           msg.angular.z=w;
+             msg.linear.x=0;
+             ifcase=1;
+        }
+        //if robot sees a wall straight ahead but is far from walls on its right side, go straight 
+        else if (sens_front>2*threashold && ((isnan(sens_right_back) && isnan(sens_right_front)) || (sens_right_back>1.5*threashold && sens_right_front>1.5*threashold ))) {
+             msg.angular.z=0;
+             msg.linear.x=v;
+             ifcase=2;
+        }
+        // if the front gets close to a wall, slow down and turn left
+       else if (sens_front<2*threashold ){ 
+              msg.angular.z=w;
+              msg.linear.x=0.5*v;
+              ifcase=3;
+         }
+         //if one of the side sensors is NAN, turn in the other direction
+         else if (( !isnan(sens_right_back) && isnan(sens_right_front))) {
+              msg.angular.z=-w;
+              msg.linear.x= v; 
+              ifcase=4;
           }
           else if (( isnan(sens_right_back) && !isnan(sens_right_front))) {
-               msg.angular.z=w;
-               msg.linear.x=v ;//0.1;
+               msg.angular.z=w;     
+               msg.linear.x=v;
                ifcase=5;
           }
-          else if (( !isnan(sens_right_back) && !isnan(sens_right_front))) {
-               msg.linear.x=v ;//0.5;
-               
-               if (sens_right_back>threashold && sens_right_front>threashold){
-                    msg.angular.z=-w;
-                    msg.linear.x= v ; //0.1;
-                    ifcase=6;
-               }
-               else {
-                    float k=4;
+          //if side sensors are valid,
+         else if (( !isnan(sens_right_back) && !isnan(sens_right_front))) {
+              msg.linear.x=v ;//0.5;
+               //if far away from wall, turn right to get closer to it
+              if (sens_right_back>threashold && sens_right_front>threashold){
+                   msg.angular.z=-w;     
+                   msg.linear.x= v ;
+                   ifcase=6;
+              }
+              //if in range, follow the wall
+              else {
+                    float k_ang=4; //gain for angle difference
+                    float k_dist=5; //gain for distance difference
                     float avg=(sens_right_back+sens_right_front)/2;
-                    msg.angular.z=(sens_right_back-sens_right_front)*k+5*(+threashold-avg);
-
+                    //calculate rotation from difference between the two sensors with a certain gain and the average overall distance from the wall
+                    msg.angular.z=(sens_right_back-sens_right_front)*k_ang+(+threashold-avg)*k_dist;
+                    // limiting rotation speed 
                     if (msg.angular.z>5) msg.angular.z=5; //max angular velocity
                     if (msg.angular.z<-5) msg.angular.z=-5; //max angular velocity
 
@@ -207,11 +205,8 @@ int main(int argc, char **argv) {
           
 
           //Publish the message
-          //if (data_rcvd==1){
-           ROS_INFO_STREAM("move z:"<< msg.angular.z <<" x: "<< msg.linear.x<< " case: "<< ifcase);
            pub.publish(msg);
-           data_rcvd=0;
-          //} 
+           ROS_INFO_STREAM("move z:"<< msg.angular.z <<" x: "<< msg.linear.x<< " case: "<< ifcase);
 
           //reaching the endpoint
           if (odom_y<-13.5){
@@ -240,7 +235,6 @@ int main(int argc, char **argv) {
                //spawning new model
                RelaunchModel();
                //resubscribe to topics
-
                pub=nh.advertise<geometry_msgs::Twist>("/wall_r/cmd_vel", 100);
                laser_sub=nh.subscribe("/wall_r/scan",1000,LaserMsgRecived);
                odom_sub=nh.subscribe("/wall_r//odometry/ground_truth",1000,OdometryMsgRecived);
