@@ -16,7 +16,7 @@
 
 float ldat[3];
 
-float threashold=1;
+float threshold=1;
 float sens_front,sens_right_back, sens_right_front;
 double odom_x, odom_y;
 auto lap_start=std::chrono::system_clock::now();
@@ -147,8 +147,8 @@ int main(int argc, char **argv) {
      while(ros::ok()) {
      
         ifcase=0;
-        double w=4;
-        double v=4;
+        double w=2;
+        double v=2;
 
         //if the robot sees nothing, just rotate in place
         if (isnan(sens_right_back) && isnan(sens_right_front) && isnan(sens_front)){
@@ -157,13 +157,13 @@ int main(int argc, char **argv) {
              ifcase=1;
         }
         //if robot sees a wall straight ahead but is far from walls on its right side, go straight 
-        else if (sens_front>2*threashold && ((isnan(sens_right_back) && isnan(sens_right_front)) || (sens_right_back>1.5*threashold && sens_right_front>1.5*threashold ))) {
+        else if (sens_front>2*threshold && ((isnan(sens_right_back) && isnan(sens_right_front)) || (sens_right_back>1.5*threshold && sens_right_front>1.5*threshold ))) {
              msg.angular.z=0;
              msg.linear.x=v;
              ifcase=2;
         }
         // if the front gets close to a wall, slow down and turn left
-       else if (sens_front<2*threashold ){ 
+       else if (sens_front<2*threshold ){ 
               msg.angular.z=w;
               msg.linear.x=0.5*v;
               ifcase=3;
@@ -183,7 +183,7 @@ int main(int argc, char **argv) {
          else if (( !isnan(sens_right_back) && !isnan(sens_right_front))) {
               msg.linear.x=v ;//0.5;
                //if far away from wall, turn right to get closer to it
-              if (sens_right_back>threashold && sens_right_front>threashold){
+              if (sens_right_back>threshold && sens_right_front>threshold){
                    msg.angular.z=-w;     
                    msg.linear.x= v ;
                    ifcase=6;
@@ -194,7 +194,7 @@ int main(int argc, char **argv) {
                     float k_dist=5; //gain for distance difference
                     float avg=(sens_right_back+sens_right_front)/2;
                     //calculate rotation from difference between the two sensors with a certain gain and the average overall distance from the wall
-                    msg.angular.z=(sens_right_back-sens_right_front)*k_ang+(+threashold-avg)*k_dist;
+                    msg.angular.z=(sens_right_back-sens_right_front)*k_ang+(+threshold-avg)*k_dist;
                     // limiting rotation speed 
                     if (msg.angular.z>5) msg.angular.z=5; //max angular velocity
                     if (msg.angular.z<-5) msg.angular.z=-5; //max angular velocity
