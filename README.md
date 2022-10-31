@@ -15,5 +15,5 @@ There are 3 maps currently in the project:
 - a bigger "Ç" with thick walls
 - a bigger but thin "Ç" shape
 
-The robot after having reached the endpoint, waits for 2 seconds, then respawns to a random location arounf the center of the map.
+The robot after having reached the endpoint, waits for 2 seconds, then respawns to a random location around the center of the map.
 
