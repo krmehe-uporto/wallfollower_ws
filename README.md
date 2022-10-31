@@ -8,4 +8,4 @@ To run our program:
 - run "catkin_make" to build the packages
 - run "roslaunch flatland_server server.launch world_path:=[absolute path to package]/wallfollower_ws/src/wall_robot/src/yamls/world_empty.yaml" to launch simulation enviroment
 - launch the robot program: "rosrun wall_robot wall_robot_node"
-- to change the map open world_empty.yaml and change the "map:" parameter to the map you want to open.
+- to change the map open world_empty.yaml and change the "map:" parameter to the map you want to open. There are 3 maps currently in the project.
