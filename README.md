@@ -15,5 +15,5 @@ There are 3 maps currently in the project:
 - a bigger "Ç" with thick walls
 - a bigger but thin "Ç" shape
 
-The robot after having reached the endpoint, waits for 2 seconds, then respawns to a random location around the center of the map.
+The robot after having reached the endpoint, waits for 2 seconds, then respawns to a random location around the center of the map. Every time the robot restarts it starts to save its coordinates to a .CSV file with a timestamp as the title and measures the runtime wich is added at the end of the file.
 
