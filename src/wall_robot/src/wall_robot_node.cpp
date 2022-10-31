@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
            ROS_INFO_STREAM("move z:"<< msg.angular.z <<" x: "<< msg.linear.x<< " case: "<< ifcase);
 
           //reaching the endpoint
-          if (odom_y<-13.5){
+          if (odom_y<-14.8){
                odom_y=0;
                //stop the robot
                msg.angular.z=0;
